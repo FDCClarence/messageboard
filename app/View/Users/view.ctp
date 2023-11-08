@@ -463,8 +463,6 @@
 
         //birthday validation
         function validateAndFormatBirthdate(birthdateInput) {
-            console.log("input");
-            console.log(birthdateInput);
 
             const timeZoneOffset = 0; // UTC
 
