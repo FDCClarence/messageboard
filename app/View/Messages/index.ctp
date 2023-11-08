@@ -27,8 +27,19 @@
 <!--Samples-->
 <div id="message-thread-container">
 
+
 </div>
 
+<div class="container messages-container mt-4" id="" style="height: 3em; padding: 1em; display: flex; justify-content: center; align-items: center;">
+    <div class="">
+        <div class="col text-center" style="color: darkblue;" id="show-more-div">
+            <span>show more</span>
+        </div>
+        <div class="col text-center" style="color: darkblue;" id="no-more-div">
+            <span>no more messages to add</span>
+        </div>
+    </div>
+</div>
 
 
 
@@ -65,6 +76,33 @@
 <script>
     $(document).ready(function() {
         $("#successAlertDiv").hide();
+
+        $(document).on('click', '.view-button', function(event) {
+            const messageThreadId = event.target.getAttribute('data-message-thread-id');
+            const redirectUrl = '/cake2project/messages/view?messageThreadId=' + messageThreadId;            
+            // $.ajax({
+            //     type : 'GET',
+            //     dataType : 'json',
+            //     url : redirectUrl,
+            //     data : {
+            //         messageThreadId : messageThreadId 
+            //     },
+            //     success : function (data) {
+            //         window.location.href = redirectUrl;
+            //     },
+            //     error: function(jqXHR, textStatus, errorThrown) {
+            //         console.log('Error getting messages:', errorThrown);
+            //     }
+            // });
+
+            $.get(redirectUrl, function (response) {
+            window.location.href = redirectUrl;
+            }).fail(function () {
+                console.error("Ajax Error");
+            });
+
+            
+        });
 
         //select2 initialization and data collect
         $('.userSearchClass').select2({
@@ -125,21 +163,21 @@
                 } else if (!message_content) {
                     $("#messageErrorText").text("Message field should not be empty.");
                 }
-            }else{
+            } else {
                 console.log("sending message");
-                var sender_id = <?php echo $_SESSION['userData']['user_id'];?>;
+                var sender_id = <?php echo $_SESSION['userData']['user_id']; ?>;
                 var receiver_id = selectedData[0].id;
                 $("#messageErrorText").text("");
                 $.ajax({
-                    type : 'POST',
-                    dataType : 'json',
-                    data : {
-                        sender_id : sender_id,
-                        receiver_id : receiver_id,
-                        message_content : message_content
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        sender_id: sender_id,
+                        receiver_id: receiver_id,
+                        message_content: message_content
                     },
-                    url : '/cake2project/messages/sendMessage',
-                    success : function(data){
+                    url: '/cake2project/messages/sendMessage',
+                    success: function(data) {
                         console.log("Message Thread Created Successfully!");
                         $('#closeMessageBtn').click();
                         $("#successAlertText").text("Successfully sent the message.");
@@ -148,7 +186,7 @@
                             scrollTop: 0
                         }, 'fast');
                     },
-                    error : function(){
+                    error: function() {
                         console.log("Send message error");
                     }
                 });
@@ -157,15 +195,15 @@
 
         //generate initial data
         $.ajax({
-            type : "POST",
-            dataType : 'json',
-            url : '/cake2project/messages/getMessageThreads',
-            success : function(data){
+            type: "POST",
+            dataType: 'json',
+            url: '/cake2project/messages/getMessageThreads',
+            success: function(data) {
                 console.log("initial data");
                 console.log(data);
                 var messageThreadContainer = $("#message-thread-container");
 
-                data.forEach(function (messageThread){
+                data.forEach(function(messageThread) {
                     //check if latest message is from the logged user. Displays 'YOU' instead of full name if it is.
                     thread_name = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? 'You' : messageThread.Sender.name);
                     var card = `
@@ -184,9 +222,9 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-auto card-footer d-flex justify-content-between align-items-center">
+                                    <div class="mt-auto card-footer d-flex justify-content-between align-items-center button-container" >
                                         <small class="text-muted">${messageThread.LatestMessage.created}</small>
-                                        <button class="btn btn-primary" data-toggle="modal" data-target="#myModal">
+                                        <button class="view-button btn btn-primary " data-message-thread-id="${messageThread.MessageThread.message_thread_id}"  >
                                             <i class="fas fa-eye"></i> View
                                         </button>
                                     </div>
@@ -198,14 +236,12 @@
 
                     messageThreadContainer.append(card);
                 });
-
-                
-
             },
-            error : function(){
+            error: function() {
                 console.log("Get message threads error.");
             }
         })
+
 
 
 

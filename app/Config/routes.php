@@ -27,21 +27,27 @@
  */
 
  //user routes
-	Router::connect('/', array('controller' => 'pages', 'action' => 'display', 'index'));
-	Router::connect('/users/view/*', array('controller' => 'users', 'action' => 'view'));
-	Router::connect('/users/checkEmailUnique', array('controller' => 'users', 'action' => 'checkEmailUnique'));
-	Router::connect('/users/updateEmail', array('controller' => 'users', 'action' => 'updateEmail'));
-	Router::connect('/users/passwordCheck', array('controller' => 'users', 'action' => 'passwordCheck'));
-	Router::connect('/users/passwordChange', array('controller' => 'users', 'action' => 'passwordChange'));
-	Router::connect('/users/saveImage', array('controller' => 'users', 'action' => 'saveImage'));
-	Router::connect('/users/updateUser', array('controller' => 'users', 'action' => 'updateUser'));
-	Router::connect('/users/getUsers', array('controller' => 'users', 'action' => 'getUsers'));
+Router::connect('/', array('controller' => 'pages', 'action' => 'display', 'index'));
+Router::connect('/users/view/*', array('controller' => 'users', 'action' => 'view'));
+Router::connect('/users/checkEmailUnique', array('controller' => 'users', 'action' => 'checkEmailUnique'));
+Router::connect('/users/updateEmail', array('controller' => 'users', 'action' => 'updateEmail'));
+Router::connect('/users/passwordCheck', array('controller' => 'users', 'action' => 'passwordCheck'));
+Router::connect('/users/passwordChange', array('controller' => 'users', 'action' => 'passwordChange'));
+Router::connect('/users/saveImage', array('controller' => 'users', 'action' => 'saveImage'));
+Router::connect('/users/updateUser', array('controller' => 'users', 'action' => 'updateUser'));
+Router::connect('/users/getUsers', array('controller' => 'users', 'action' => 'getUsers'));
 
 
 //message routes
 Router::connect('/messages', array('controller' => 'messages', 'action' => 'index'));
 Router::connect('/sendMessage', array('controller' => 'messages', 'action' => 'sendMessage'));
+Router::connect('/addMessage', array('controller' => 'messages', 'action' => 'sendMessage'));
+Router::connect('/searchMessage', array('controller' => 'messages', 'action' => 'searchMessage'));
+Router::connect('/showMoreMessages', array('controller' => 'messages', 'action' => 'showMoreMessages'));
+
+Router::connect('/deleteMessage', array('controller' => 'messages', 'action' => 'deleteMessage'));
 Router::connect('/getMessageThreads', array('controller' => 'messages', 'action' => 'getMessageThreads'));
+Router::connect('/messages/getMessages', array('controller' => 'messages', 'action' => 'getMessages'));
 
 /**
  * ...and connect the rest of 'Pages' controller's URLs.

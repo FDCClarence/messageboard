@@ -4,17 +4,20 @@ App::uses('AppController', 'Controller');
 App::uses('BlowfishPasswordHasher', 'Controller/Component/Auth');
 
 
-class UsersController extends AppController {
+class UsersController extends AppController
+{
 
     public $components = array('Session');
 
 
-    public function beforeFilter() {
+    public function beforeFilter()
+    {
         parent::beforeFilter();
-        $this->Auth->allow('add', 'logout','register_success', 'users');
+        $this->Auth->allow('add', 'logout', 'register_success', 'users');
     }
 
-    public function login() {
+    public function login()
+    {
         if ($this->request->is('post')) {
             if ($this->Auth->login()) {
                 $user_id = $this->Auth->user('user_id');
@@ -22,16 +25,18 @@ class UsersController extends AppController {
                 $this->User->saveField('last_login_time', date('Y-m-d H:i:s'));
                 $user = $this->User->find('first', array(
                     'conditions' => array('User.user_id' => $user_id),
-                    'fields' => array('User.user_id', 
-                    'User.name', 
-                    'User.email', 
-                    'User.birthdate', 
-                    'User.gender', 
-                    'User.hobby', 
-                    'User.created', 
-                    'User.updated', 
-                    'User.last_login_time',
-                    'User.img_url')
+                    'fields' => array(
+                        'User.user_id',
+                        'User.name',
+                        'User.email',
+                        'User.birthdate',
+                        'User.gender',
+                        'User.hobby',
+                        'User.created',
+                        'User.updated',
+                        'User.last_login_time',
+                        'User.img_url'
+                    )
                 ));
                 $this->Session->write('userData', $user['User']);
                 $this->redirect($this->Auth->redirectUrl('index'));
@@ -40,18 +45,21 @@ class UsersController extends AppController {
             }
         }
     }
-    
-    public function logout() {
+
+    public function logout()
+    {
         $this->Session->destroy();
         return $this->redirect($this->Auth->logout());
     }
 
-    public function index() {
+    public function index()
+    {
         $this->User->recursive = 0;
         $this->set('users', $this->paginate());
     }
 
-    public function view($id = null) {
+    public function view($id = null)
+    {
         $this->set('user', $this->User->find('first', array(
             'conditions' => array('User.user_id' => $id),
             'fields' => array(
@@ -68,13 +76,14 @@ class UsersController extends AppController {
         )));
     }
 
-    public function add() {
+    public function add()
+    {
         if ($this->request->is('post')) {
             $this->User->create();
             $data = $this->request->data;
             $data['User']['last_login_time'] = date('Y-m-d H:i:s');
             if ($this->User->save($data)) {
-                $user_id = $this->User->id; 
+                $user_id = $this->User->id;
                 $user = $this->User->find('first', array(
                     'conditions' => array('User.user_id' => $user_id),
                     'fields' => array(
@@ -97,11 +106,13 @@ class UsersController extends AppController {
         }
     }
 
-    public function register_success($user_id) {
+    public function register_success($user_id)
+    {
         //only used to redirect
     }
 
-    public function edit($id = null) {
+    public function edit($id = null)
+    {
         $this->User->id = $id;
         if (!$this->User->exists()) {
             throw new NotFoundException(__('Invalid user'));
@@ -120,7 +131,8 @@ class UsersController extends AppController {
         }
     }
 
-    public function delete($id = null) {
+    public function delete($id = null)
+    {
         $this->request->allowMethod('post');
         $this->User->id = $id;
         if (!$this->User->exists()) {
@@ -134,7 +146,8 @@ class UsersController extends AppController {
         return $this->redirect(array('action' => 'index'));
     }
 
-    public function checkEmailUnique() {
+    public function checkEmailUnique()
+    {
         $this->autoRender = false; // Disable rendering a view
         if ($this->request->is('ajax')) {
             $email = $this->request->data['email'];
@@ -147,22 +160,23 @@ class UsersController extends AppController {
                 )
             ));
             //unique email = true
-            $isUnique = (empty($user)) ? true : false; 
+            $isUnique = (empty($user)) ? true : false;
             // Send a JSON response
             $this->response->body(json_encode(['unique' => $isUnique]));
             $this->response->type('json');
         }
     }
 
-    public function updateEmail(){
-        $this->autoRender = false; 
-    
+    public function updateEmail()
+    {
+        $this->autoRender = false;
+
         if ($this->request->is('ajax')) {
             $newEmail = $this->request->data['email'];
             $oldEmail = $this->request->data['oldEmail'];
             $originalPasswordValidationRules = $this->User->validator()->getField('password');
-            $this->User->validator()->remove('password'); 
-    
+            $this->User->validator()->remove('password');
+
             $conditions = array('User.email' => $oldEmail, 'is_deleted' => false);
             $fields = array('email' => "'" . $newEmail . "'");
             if ($this->User->updateAll($fields, $conditions)) {
@@ -171,39 +185,41 @@ class UsersController extends AppController {
             } else {
                 $response = array('success' => false, 'message' => 'Error updating email');
             }
-    
-            $this->User->validator()->add('password', $originalPasswordValidationRules); 
+
+            $this->User->validator()->add('password', $originalPasswordValidationRules);
             $this->response->body(json_encode($response));
             $this->response->type('json');
         }
     }
 
-    
-    public function passwordCheck() {
-        $this->autoRender = false; 
+
+    public function passwordCheck()
+    {
+        $this->autoRender = false;
         if ($this->request->is('ajax')) {
             $id = $this->request->data['user_id'];
             $password = $this->request->data['password'];
-    
+
             $user = $this->User->find('first', array(
                 'conditions' => array(
                     'User.user_id' => $id,
                     'User.is_deleted' => false
                 )
             ));
-    
+
             $isValid = false;
             if ($user) {
                 $hasher = new BlowfishPasswordHasher();
                 $isValid = $hasher->check($password, $user['User']['password']);
             }
-    
+
             $this->response->body(json_encode(['valid' => $isValid]));
             $this->response->type('json');
         }
     }
-    
-    public function passwordChange() { 
+
+    public function passwordChange()
+    {
         $this->autoRender = false;
 
         $hasher = new BlowfishPasswordHasher();
@@ -227,18 +243,19 @@ class UsersController extends AppController {
         $this->response->type('json');
     }
 
-    public function saveImage() {
+    public function saveImage()
+    {
         $this->autoRender = false;
         // Check if the request contains files
         if ($this->request->form['image']) {
             $file = $this->request->form['image'];
-    
+
             // Handle the file upload
             if ($file['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = WWW_ROOT . 'img' . DS . 'profile-pictures' . DS;
                 $filename = uniqid() . '_' . $file['name'];
                 $targetPath = $uploadDir . $filename;
-    
+
                 if (move_uploaded_file($file['tmp_name'], $targetPath)) {
                     // Image uploaded and saved successfully
                     $imageURL = '/img/profile-pictures/' . $filename;
@@ -258,16 +275,17 @@ class UsersController extends AppController {
         }
     }
 
-    public function updateUser() {
+    public function updateUser()
+    {
         $this->autoRender = false;
-    
+
         if ($this->request->is('post')) {
             // Retrieve user data from the POST request
             $userData = $this->request->data;
-    
+
             // Create conditions for the update
             $conditions = array('User.user_id' => $userData['user_id']);
-    
+
             // Fields to update with proper escaping
             $fields = array(
                 'name' => "'" . $userData['name'] . "'",
@@ -275,7 +293,7 @@ class UsersController extends AppController {
                 'gender' => "'" . $userData['gender'] . "'",
                 'hobby' => "'" . $userData['hobby'] . "'",
             );
-    
+
             // Update the user data
             if ($this->User->updateAll($fields, $conditions)) {
                 // Update successful
@@ -290,48 +308,31 @@ class UsersController extends AppController {
             }
         }
     }
-    
-    public function getUsers() {
+
+    public function getUsers()
+    {
         $this->autoRender = false;
-    
+
         if ($this->request->is('ajax')) {
             $term = $this->request->query('term');
-            // $conditions = [
-            //     'is_deleted' => 0,
-            //     'AND' => [
-            //         ['email LIKE' => "%$term%"],
-            //         ['name LIKE' => "%$term%"],
-            //     ]
-            // ];
-            $conditions = [
-                'is_deleted' => 0,
-                'user_id <>' => $_SESSION['userData']['user_id'],
-                'AND' => [
-                    ['email LIKE' => "%$term%"],
-                    ['name LIKE' => "%$term%"]
-                ]
-            ];
-            $fields = ['user_id AS id', 'name AS text', 'img_url'];
-            $users = $this->User->find('all', [
-                'conditions' => $conditions,
-                'fields' => $fields
-            ]);
-    
+            $user_id = $_SESSION['userData']['user_id'];
+            $result = $this->User->query(
+                "SELECT user_id AS id, name AS text, img_url FROM users WHERE (email LIKE ? OR name LIKE ?) AND user_id <> ?",
+                array("%$term%", "%$term%", $user_id)
+            );
+
+
             $response = [];
-            foreach ($users as $user) {
+            foreach ($result as $user) {
                 $response[] = [
-                    'id' => $user['User']['id'],
-                    'text' => $user['User']['text'],
-                    'img_url' => $user['User']['img_url']
+                    'id' => $user['users']['id'],
+                    'text' => $user['users']['text'],
+                    'img_url' => $user['users']['img_url']
                 ];
             }
+
             $this->response->type('json');
             echo json_encode(['users' => $response]);
-            
         }
     }
-    
-    
-    
-    
 }
