@@ -36,7 +36,7 @@
             <span>show more</span>
         </div>
         <div class="col text-center" style="color: darkblue;" id="no-more-div">
-            <span>no more messages to add</span>
+            <span>no more message threads to add</span>
         </div>
     </div>
 </div>
@@ -72,14 +72,22 @@
     </div>
 </div>
 
+<pre>
+
+<?php echo print_r($messages); ?>
+</pre>
+
 
 <script>
     $(document).ready(function() {
         $("#successAlertDiv").hide();
+        $("#no-more-div").hide();
+
+        generateInitial();
 
         $(document).on('click', '.view-button', function(event) {
             const messageThreadId = event.target.getAttribute('data-message-thread-id');
-            const redirectUrl = '/cake2project/messages/view?messageThreadId=' + messageThreadId;            
+            const redirectUrl = '/cake2project/messages/view?messageThreadId=' + messageThreadId;
             // $.ajax({
             //     type : 'GET',
             //     dataType : 'json',
@@ -95,13 +103,13 @@
             //     }
             // });
 
-            $.get(redirectUrl, function (response) {
-            window.location.href = redirectUrl;
-            }).fail(function () {
+            $.get(redirectUrl, function(response) {
+                window.location.href = redirectUrl;
+            }).fail(function() {
                 console.error("Ajax Error");
             });
 
-            
+
         });
 
         //select2 initialization and data collect
@@ -165,6 +173,7 @@
                 }
             } else {
                 console.log("sending message");
+                
                 var sender_id = <?php echo $_SESSION['userData']['user_id']; ?>;
                 var receiver_id = selectedData[0].id;
                 $("#messageErrorText").text("");
@@ -185,6 +194,8 @@
                         $('html, body').animate({
                             scrollTop: 0
                         }, 'fast');
+                        $("#message-thread-container").empty();
+                        generateInitial();
                     },
                     error: function() {
                         console.log("Send message error");
@@ -194,10 +205,14 @@
         });
 
         //generate initial data
-        $.ajax({
+        function generateInitial(){
+            $.ajax({
             type: "POST",
             dataType: 'json',
             url: '/cake2project/messages/getMessageThreads',
+            data: {
+                threadCount: 0
+            },
             success: function(data) {
                 console.log("initial data");
                 console.log(data);
@@ -205,20 +220,24 @@
 
                 data.forEach(function(messageThread) {
                     //check if latest message is from the logged user. Displays 'YOU' instead of full name if it is.
-                    thread_name = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? 'You' : messageThread.Sender.name);
+                    var thread_name = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? messageThread.Receiver.name : messageThread.Sender.name);
+                    var thread_img = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? messageThread.Receiver.img_url : messageThread.Sender.img_url);
+                    var sender_name = (messageThread.LatestMessage.sender_id == messageThread.Sender.user_id) ? messageThread.Sender.name : messageThread.Receiver.name;
+                    console.log("Thread Data: ");
+                    console.log(messageThread);
                     var card = `
-                    <div class="row mt-4">
+                    <div class="row mt-4 thread-card">
                         <div class="col">
                             <div class="card" style="width: 100%;">
                                 <div class="d-flex flex-column h-100">
                                     <div class="row no-gutters">
                                         <div class=" col-md-2 d-flex align-items-center justify-content-center" style="height: 100px;">
-                                            <img src="<?php echo $this->webroot; ?>${messageThread.Sender.img_url}" alt="Image" class="card-img mt-1" style="width: auto; max-height: 90px; max-width: 90px;">
+                                            <img src="<?php echo $this->webroot; ?>${thread_img}" alt="Image" class="card-img mt-1" style="width: auto; max-height: 90px; max-width: 90px;">
                                         </div>
                                         <div class="col-md-10">
                                             <div class="card-body">
                                                 <p class="card-text font-weight-bold" style="font-weight: bold;">${thread_name}</p>
-                                                <p class="card-text mt-3" style="color: #666666;">${messageThread.LatestMessage.message_content}</p>
+                                                <p class="card-text mt-3" style="color: #666666;"><strong>${sender_name} : </strong>${messageThread.LatestMessage.message_content}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -240,11 +259,70 @@
             error: function() {
                 console.log("Get message threads error.");
             }
-        })
+        });
+        }
+        
 
-
-
-
+        $("#show-more-div").click(function() {
+            console.log("show more clicked");
+            var threadCount = $("#message-thread-container").find(".thread-card").length;
+            console.log("number of threads : " + threadCount);
+            $.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '/cake2project/messages/getMessageThreads',
+                data: {
+                    threadCount: threadCount
+                },
+                success: function(data) {
+                    if (data.length > 0) {
+                        var messageThreadContainer = $("#message-thread-container");
+                        data.forEach(function(messageThread) {
+                            //check if latest message is from the logged user. Displays 'YOU' instead of full name if it is.
+                            var thread_name = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? messageThread.Receiver.name : messageThread.Sender.name);
+                            var thread_img = ((<?php echo $_SESSION['userData']['user_id']; ?> == messageThread.Sender.user_id) ? messageThread.Receiver.img_url : messageThread.Sender.img_url);
+                            var sender_name = (messageThread.LatestMessage.sender_id == messageThread.Sender.user_id) ? messageThread.Sender.name : messageThread.Receiver.name;
+                            console.log("Thread Data: ");
+                            console.log(messageThread);
+                            var card = `
+                            <div class="row mt-4 thread-card">
+                                <div class="col">
+                                    <div class="card" style="width: 100%;">
+                                        <div class="d-flex flex-column h-100">
+                                            <div class="row no-gutters">
+                                                <div class=" col-md-2 d-flex align-items-center justify-content-center" style="height: 100px;">
+                                                    <img src="<?php echo $this->webroot; ?>${thread_img}" alt="Image" class="card-img mt-1" style="width: auto; max-height: 90px; max-width: 90px;">
+                                                </div>
+                                                <div class="col-md-10">
+                                                    <div class="card-body">
+                                                        <p class="card-text font-weight-bold" style="font-weight: bold;">${thread_name}</p>
+                                                        <p class="card-text mt-3" style="color: #666666;"><strong>${sender_name} : </strong>${messageThread.LatestMessage.message_content}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-auto card-footer d-flex justify-content-between align-items-center button-container" >
+                                                <small class="text-muted">${messageThread.LatestMessage.created}</small>
+                                                <button class="view-button btn btn-primary " data-message-thread-id="${messageThread.MessageThread.message_thread_id}"  >
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                            messageThreadContainer.append(card);
+                        });
+                    } else {
+                        $("#show-more-div").hide();
+                        $("#no-more-div").show();
+                    }
+                },
+                error: function() {
+                    console.log("Show more error.");
+                }
+            });
+        });
 
     });
 </script>

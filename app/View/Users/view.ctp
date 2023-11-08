@@ -161,7 +161,7 @@
                 <div class="d-flex align-items-center">
                     <div class="edit-image-container ml-3">
                         <label for="image-input" class="image-label">
-                            <img id="user-image-preview" src="<?php echo $this->webroot.$_SESSION['userData']['img_url']; ?>" alt="User Image" class="edit-image">
+                            <img id="user-image-preview" src="<?php echo $this->webroot . $_SESSION['userData']['img_url']; ?>" alt="User Image" class="edit-image">
                             <span class="change-image-text">Change Image</span>
                         </label>
                         <form enctype="multipart/form-data" id="image-form">
@@ -177,7 +177,7 @@
                 <div class="d-flex align-items-center">
                     <div class="edit-image-container mx-auto"> <!-- Add mx-auto class for horizontal centering -->
                         <label for="image-input" class="image-label">
-                            <img id="user-image-preview" src="<?php echo $this->webroot.$_SESSION['userData']['img_url']; ?>" alt="User Image" class="edit-image">
+                            <img id="user-image-preview" src="<?php echo $this->webroot . $_SESSION['userData']['img_url']; ?>" alt="User Image" class="edit-image">
                             <span class="change-image-text">Change Image</span>
                         </label>
                         <form enctype="multipart/form-data" id="image-form">
@@ -395,7 +395,7 @@
 
 
             var userData = {
-                user_id :  $("#user_id").val(),
+                user_id: $("#user_id").val(),
                 name: $("#name").val(),
                 birthdate: formattedBirthday,
                 gender: $('input[name="gender"]:checked').val(),
@@ -410,14 +410,15 @@
                     .filter(([key, value]) => value)
                     .map(([key]) => {
                         switch (key) {
-                            case 'nameError':
-                                return 'Name';
+
                             case 'hobbyError':
                                 return 'Hobby';
                             case 'genderError':
                                 return 'Gender';
                             case 'birthdayError':
                                 return 'Birthdate';
+                            case 'nameError':
+                                return 'Name (5 to 20 characters)';
                             default:
                                 return key;
                         }
@@ -434,11 +435,11 @@
                 }, 'fast');
             } else {
                 $.ajax({
-                    type : 'POST',
-                    dataType : 'json',
-                    data : userData,
-                    url : '/cake2project/users/updateUser',
-                    success : function(data){
+                    type: 'POST',
+                    dataType: 'json',
+                    data: userData,
+                    url: '/cake2project/users/updateUser',
+                    success: function(data) {
                         console.log("update was a success");
                         $("#successAlertDiv").show();
                         $("#successAlertText").text("Update Successful!");
@@ -450,7 +451,7 @@
                         $("#password-button").show();
                         $('#save-button, #cancel-button').hide();
                     },
-                    error : function(){
+                    error: function() {
                         console.log("update error ");
                     }
                 })
@@ -462,31 +463,43 @@
 
         //birthday validation
         function validateAndFormatBirthdate(birthdateInput) {
-            // Parse the input birthdate
-            const birthdate = new Date(birthdateInput);
+            console.log("input");
+            console.log(birthdateInput);
 
-            if (isNaN(birthdate.getTime())) {
+            const timeZoneOffset = 0; // UTC
+
+            const parts = birthdateInput.split(' ');
+            const monthNames = [
+                "January", "February", "March", "April", "May", "June", "July",
+                "August", "September", "October", "November", "December"
+            ];
+            const month = monthNames.indexOf(parts[0]);
+            const day = parseInt(parts[1].replace(',', ''), 10);
+            const year = parseInt(parts[2], 10);
+
+            if (isNaN(year) || isNaN(month) || isNaN(day)) {
                 return 'error'; // Invalid date
             }
 
-            // Check if the birthdate is in the future
+            const birthdate = new Date(Date.UTC(year, month, day) - (timeZoneOffset * 60000));
+
             if (birthdate > new Date()) {
-                return 'error'; // Birthdate is in the future
+                return 'error';
             }
 
-            // Calculate the maximum age allowed (122 years old)
             const maxAgeDate = new Date();
             maxAgeDate.setFullYear(maxAgeDate.getFullYear() - 122);
 
             if (birthdate < maxAgeDate) {
-                return 'error'; // User's age exceeds 122 years
+                return 'error';
             }
 
-            // Format the birthdate for saving in the database (assuming YYYY-MM-DD format)
             const formattedBirthday = birthdate.toISOString().split('T')[0];
-
+            console.log("output");
+            console.log(formattedBirthday);
             return formattedBirthday;
         }
+
 
         //edit email modal click
         $("#change-email-button").click(function() {
@@ -697,7 +710,7 @@
                             data: formData, // Send the formData object, not the 'file' object
                             processData: false, // Prevent jQuery from processing data
                             contentType: false,
-                            async : true,
+                            async: true,
                             success: function(data) {
                                 $('#user-image-preview').attr('src', e.target.result);
 

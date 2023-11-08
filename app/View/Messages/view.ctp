@@ -553,48 +553,47 @@
                     message_thread_id: message_thread_id
                 },
                 success: function(data) {
-                    if(data.length > 0){
+                    if (data.length > 0) {
+                        data.forEach(function(message) {
+                            var bubbleType = (message['receiver']['user_id'] == user_id ? 'user2' : 'user1');
+                            var profilePicture = webroot + message['sender']['img_url'];
 
-                    }else{
+                            // Shorten the message content if it's longer than 50 characters
+                            var messageContent = message['m']['message_content'];
+                            if (messageContent.length > 50) {
+                                messageContent = messageContent.slice(0, 50) + '...';
+                            }
+
+                            var chatBubble = `
+                                                <div class="chat-bubble ${bubbleType}" title="click to show more/show less">
+                                                    <img src="${profilePicture}" alt="Profile Picture" class="user-avatar">
+                                                    <div class="chat-text">
+                                                        <p class="message-content">${messageContent}</p>
+                                                        <span class="datetime">${message[0]['formatted_created_date']}</span>
+                                                    </div>
+                                                    ${bubbleType == 'user1' ? `<button class="delete-button" data-message-id="${message['m']['message_id']}">x</button>` : ''}
+                                                </div>
+                                            `;
+
+                            // Add a click event listener to toggle the message content
+                            var isShortened = true;
+                            chatBubble = $(chatBubble); // Convert chatBubble to a jQuery object
+                            chatBubble.find('.message-content').click(function() {
+                                if (isShortened) {
+                                    $(this).text(message['m']['message_content']);
+                                } else {
+                                    $(this).text(messageContent);
+                                }
+                                isShortened = !isShortened;
+                            });
+
+                            $("#messages-container").prepend(chatBubble);
+                        });
+                    } else {
                         $("#show-more-div").hide();
                         $("#no-more-div").show();
                     }
-                    // Assuming 'data.messages' is an array containing messages, similar to your original 'messages' array
-                    data.forEach(function(message) {
-                        var bubbleType = (message['receiver']['user_id'] == user_id ? 'user2' : 'user1');
-                        var profilePicture = webroot + message['sender']['img_url'];
 
-                        // Shorten the message content if it's longer than 50 characters
-                        var messageContent = message['m']['message_content'];
-                        if (messageContent.length > 50) {
-                            messageContent = messageContent.slice(0, 50) + '...';
-                        }
-
-                        var chatBubble = `
-                            <div class="chat-bubble ${bubbleType}" title="click to show more/show less">
-                                <img src="${profilePicture}" alt="Profile Picture" class="user-avatar">
-                                <div class="chat-text">
-                                    <p class="message-content">${messageContent}</p>
-                                    <span class="datetime">${message[0]['formatted_created_date']}</span>
-                                </div>
-                                ${bubbleType == 'user1' ? `<button class="delete-button" data-message-id="${message['m']['message_id']}">x</button>` : ''}
-                            </div>
-                        `;
-
-                        // Add a click event listener to toggle the message content
-                        var isShortened = true;
-                        chatBubble = $(chatBubble); // Convert chatBubble to a jQuery object
-                        chatBubble.find('.message-content').click(function() {
-                            if (isShortened) {
-                                $(this).text(message['m']['message_content']);
-                            } else {
-                                $(this).text(messageContent);
-                            }
-                            isShortened = !isShortened;
-                        });
-
-                        $("#messages-container").prepend(chatBubble);
-                    });
                 },
                 error: function() {
                     console.log("Get new messages error.");

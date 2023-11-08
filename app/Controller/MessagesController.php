@@ -160,7 +160,7 @@ class MessagesController extends AppController
         $this->loadModel('Message_thread');
         $userID = $_SESSION['userData']['user_id'];
         $thread_limit = 5;
-        $list_count = 0;
+        $threadCount = $this->request->data['threadCount'];
         $results = $this->Message_thread->query("
                                                     SELECT MessageThread.message_thread_id, LatestMessage.*, Sender.*, Receiver.*
                                                     FROM message_thread AS MessageThread
@@ -181,8 +181,9 @@ class MessagesController extends AppController
                                                     WHERE MessageThread.user_id_1 = $userID OR MessageThread.user_id_2 = $userID
                                                     GROUP BY MessageThread.message_thread_id
                                                     HAVING LatestMessage.message_id IS NOT NULL
+                                                    ORDER BY LatestMessage.message_id DESC
                                                     LIMIT $thread_limit
-                                                    OFFSET $list_count;
+                                                    OFFSET $threadCount;
                                                 ");
         // Set the response type to JSON
         $this->response->type('json');
